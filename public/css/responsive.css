@@ -1,0 +1,14 @@
+/* ===== RESPONSIVO e movimento reduzido (sempre por último) ===== */
+@media (max-width:1100px){.mas{column-count:3}.fgrid{grid-template-columns:1fr 1fr}.steps3{grid-template-columns:1fr}.step3{min-height:240px}}
+@media (max-width:860px){
+  .links{display:none}.nav-in{grid-template-columns:1fr auto}
+  .wrap,.nav-in,.hero-in,.about2-in{padding-left:20px;padding-right:20px}
+  .hero-in{grid-template-columns:1fr;padding-bottom:48px}.hero-r{max-width:none}
+  .bento3{grid-template-columns:1fr}.b-l,.b-c,.b-r{aspect-ratio:4/3}
+  .pillars,.why,.cta-card,.fgrid{grid-template-columns:1fr}
+  .mas{column-count:2;column-gap:12px}.g{margin-bottom:12px}
+  .track{margin:0 -20px;padding:0 20px}.scard{height:460px}
+  .form-card{padding:24px}.cta-l{padding:24px 12px}
+  .lb-n{top:auto;bottom:calc(14px + env(safe-area-inset-bottom,0px));margin:0}.lb-f img{max-height:calc(100vh - 230px)}
+}
+@media (prefers-reduced-motion:reduce){.nav,.cover{animation:none}.rv{opacity:1;translate:none;transition:none}.lb,.lb-f img{transition:none}.dots i{animation:none;opacity:1}}

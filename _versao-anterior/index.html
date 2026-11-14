@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ruwer Garage | Preparação automotiva e dinamômetro em Brasília</title>
+<meta name="description" content="Remap, escape, suspensão e mecânica de precisão com cada ganho medido no dinamômetro. Agende sua avaliação na Ruwer Garage, em Brasília.">
+<meta name="theme-color" content="#000000">
+<meta property="og:title" content="Ruwer Garage | Preparação automotiva">
+<meta property="og:description" content="Potência que aparece no dyno. Remap, escape e mecânica de precisão em Brasília.">
+<meta property="og:image" content="../public/assets/img/og.jpg">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/png" href="../public/assets/img/favicon.png">
+<link rel="apple-touch-icon" href="../public/assets/img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap" rel="stylesheet">
+
+<!-- Estilos (ordem importa: base → componentes → hero → seções) -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/walk.css">
+<link rel="stylesheet" href="css/sections.css">
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="#topo" aria-label="Ruwer Garage, início"><img src="../public/assets/img/logo.webp" alt="Ruwer Garage" width="965" height="265"></a>
+  <nav aria-label="Principal">
+    <a href="#servicos">Serviços</a><a href="#resultados">Resultados</a><a href="#processo">Processo</a><a href="#oficina">Oficina</a><a href="#duvidas">Dúvidas</a>
+    <a class="btn sm" href="#agendar">Agendar</a>
+  </nav>
+</header>
+
+<main id="topo">
+
+<!-- ============ HERO: caminhada pelo galpão ============ -->
+<section class="walk" id="walk" aria-label="Galpão da Ruwer Garage">
+  <div class="stage">
+    <canvas id="cv" role="img" aria-label="Ilustração do galpão: corredor com colunas vermelhas, o dyno à esquerda e baias de serviço à direita"></canvas>
+    <div class="scrim"></div>
+
+    <button class="hs" data-x="-8.2" data-y="1.1" data-z="7.5" data-go="#servicos"><i></i><span class="t"><b>Lavagem de entrega</b><span>Todo carro sai daqui limpo.</span></span></button>
+    <button class="hs" data-x="-10.2" data-y="3.4" data-z="24" data-go="#resultados"><i></i><span class="t"><b>Dyno</b><span>Onde a potência é medida.</span></span></button>
+    <button class="hs" data-x="5.4" data-y="2.3" data-z="23" data-go="#servicos"><i></i><span class="t"><b>Baias de serviço</b><span>Instalação e mecânica.</span></span></button>
+
+    <div class="hero-copy" id="heroCopy">
+      <h1 class="display">Potência que aparece no dyno.</h1>
+      <p class="lead">Remap, escape e mecânica de precisão para carros que merecem mais. Cada ajuste é medido antes e depois, no nosso dinamômetro.</p>
+      <div class="row"><a class="btn" href="#agendar">Agendar avaliação</a><a class="link" href="#resultados">Ver resultados no dyno</a></div>
+    </div>
+    <div class="cue" id="cue">Role para entrar</div>
+
+    <div class="endcard" id="endcard">
+      <h2 class="display">Agora é a vez do seu carro.</h2>
+      <a class="btn" href="#agendar">Agendar avaliação</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOTO EM TELA CHEIA (sem texto por cima) ============ -->
+<div class="band">
+  <div class="inner"><img src="../public/assets/img/hero-bmw.webp" alt="BMW Série 3 cinza com adesivagem Ruwer Motorsport, rodas esportivas e pinças de freio vermelhas" width="1672" height="941" loading="lazy"></div>
+</div>
+
+<!-- ============ SERVIÇOS ============ -->
+<section class="sec light" id="servicos">
+  <div class="wrap svc">
+    <div class="side">
+      <h2 class="display">O que a Ruwer faz no seu carro</h2>
+      <p>Cinco serviços, um padrão: nada sai da oficina sem medição e sem teste.</p>
+      <a class="btn" href="#agendar">Agendar avaliação</a>
+      <div class="svc-photo frame" aria-hidden="true">
+        <img data-key="res-virtus"    class="on" src="../public/assets/img/res-virtus.webp"    alt="" loading="lazy">
+        <img data-key="res-281"       src="../public/assets/img/res-281.webp"       alt="" loading="lazy">
+        <img data-key="oficina-civic" src="../public/assets/img/oficina-civic.webp" alt="" loading="lazy">
+        <img data-key="hero-bmw"      src="../public/assets/img/hero-bmw.webp"      alt="" loading="lazy">
+        <img data-key="engine"        src="../public/assets/img/engine.webp"        alt="" loading="lazy">
+      </div>
+    </div>
+    <div class="rows">
+      <a class="row" data-photo="res-virtus" href="#agendar"><h3>Remap de ECU</h3><p>Mapa de injeção, ignição e pressão de turbo ajustado ao seu carro e ao combustível que você usa.</p></a>
+      <a class="row" data-photo="res-281" href="#agendar"><h3>Dinamômetro</h3><p>Medimos potência e torque antes e depois. Você recebe o resultado da medição.</p></a>
+      <a class="row" data-photo="oficina-civic" href="#agendar"><h3>Escape e admissão</h3><p>Downpipe, catback e filtros esportivos instalados e testados, com o ganho conferido no dyno.</p></a>
+      <a class="row" data-photo="hero-bmw" href="#agendar"><h3>Suspensão e freios</h3><p>Coilovers, geometria e kits de freio para a potência chegar ao asfalto com controle.</p></a>
+      <a class="row" data-photo="engine" href="#agendar"><h3>Mecânica de precisão</h3><p>Diagnóstico com scanner, revisões e reparos com peças de qualidade, por quem prepara motores.</p></a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RESULTADOS REAIS NO DYNO ============ -->
+<section class="sec dark" id="resultados">
+  <div class="wrap">
+    <div class="res-head">
+      <h2 class="display">Resultados reais.<br>Medidos no dyno.</h2>
+      <p>Quatro carros que passaram pela Ruwer. A potência está em whp, a medida na roda do carro.</p>
+    </div>
+    <div class="res">
+      <div class="res-photo frame" id="resPhoto">
+        <img data-key="res-up"     src="../public/assets/img/res-up.webp"     alt="Volkswagen Up! 170 TSI branco sobre o dinamômetro da Ruwer, com o capô aberto" loading="lazy">
+        <img data-key="res-virtus" src="../public/assets/img/res-virtus.webp" alt="Volkswagen Virtus cinza sobre o dinamômetro da Ruwer" loading="lazy">
+        <img data-key="res-f30"    src="../public/assets/img/res-f30.webp"    alt="BMW 320i F30 branca sobre o dinamômetro da Ruwer, com o capô aberto" loading="lazy">
+        <img data-key="res-281"    src="../public/assets/img/res-281.webp"    alt="BMW cinza com adesivagem Ruwer Motorsport sobre o dinamômetro" loading="lazy">
+      </div>
+      <div class="res-body">
+        <div class="tabs" id="tabs" role="group" aria-label="Escolha o carro">
+          <button class="tab" aria-pressed="true">Up! 170 TSI<small>Remap</small></button>
+          <button class="tab" aria-pressed="false">Virtus 1.4 TSI<small>Stage 1</small></button>
+          <button class="tab" aria-pressed="false">BMW 320i F30<small>Stage 2</small></button>
+          <button class="tab" aria-pressed="false">BMW preparada<small>Preparação exclusiva</small></button>
+        </div>
+        <div class="bars" aria-live="polite">
+          <div class="bar-row" id="rowB"><span class="lbl">Antes</span><div class="track"><i class="fill" id="fillB"></i></div><b id="valB">0<small>whp</small></b></div>
+          <div class="bar-row" id="rowA"><span class="lbl">Depois</span><div class="track"><i class="fill hot" id="fillA"></i></div><b id="valA">0<small>whp</small></b></div>
+        </div>
+        <div class="gain"><b id="gain">+0 whp</b><span id="gainTxt"></span></div>
+      </div>
+    </div>
+    <p class="fine">Cada carro tem um resultado. O ganho depende do modelo, do combustível e das peças, e é sempre medido no dyno antes da entrega.</p>
+  </div>
+</section>
+
+<!-- ============ PROCESSO (sequência real: numeração justificada) ============ -->
+<section class="sec concrete" id="processo">
+  <div class="wrap">
+    <div class="proc-head">
+      <div>
+        <h2 class="display">Da avaliação<br>à entrega</h2>
+        <p class="lead">Antes de qualquer remap, a gente verifica a saúde do motor. Preparação bem feita começa com o carro pronto para receber a calibração.</p>
+      </div>
+      <figure class="vid frame">
+        <video data-inview muted loop playsinline preload="metadata" poster="../public/assets/img/motor-poster.webp" aria-label="Motor desmontado em vista explodida: antes de iniciar o remap, verificamos a saúde do motor">
+          <source src="../public/assets/video/saude-do-motor.mp4" type="video/mp4">
+        </video>
+      </figure>
+    </div>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><h3>Avaliação</h3><p>Você conta o objetivo. A gente escaneia o carro e confere o estado do motor.</p></div>
+      <div class="step"><span class="n">2</span><h3>Projeto</h3><p>Definimos o pacote, a meta de potência, o prazo e o valor antes de começar.</p></div>
+      <div class="step"><span class="n">3</span><h3>Instalação</h3><p>Peças instaladas e conferidas na baia, com ferramenta calibrada.</p></div>
+      <div class="step"><span class="n">4</span><h3>Dyno e calibração</h3><p>O carro sobe no dinamômetro. Ajustamos o mapa até a curva ficar como planejada.</p></div>
+      <div class="step"><span class="n">5</span><h3>Entrega</h3><p>Carro lavado, test-drive e o resultado da medição na sua mão.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EQUIPE ============ -->
+<section class="sec dark" id="equipe">
+  <div class="wrap">
+    <div class="team-head">
+      <h2 class="display">Quem cuida do seu carro</h2>
+      <p>Cada carro passa pelas mãos da equipe da Ruwer, do diagnóstico à entrega.</p>
+    </div>
+    <div class="team">
+      <figure class="frame"><img src="../public/assets/img/team-1.webp" alt="Mecânico da Ruwer concentrado, segurando uma peça do carro" loading="lazy"></figure>
+      <figure class="frame"><img src="../public/assets/img/team-2.webp" alt="Mãos de um mecânico da Ruwer trabalhando no motor, com a marca Ruwer Motorsport" loading="lazy"></figure>
+      <figure class="frame"><img src="../public/assets/img/team-3.webp" alt="Mecânico da Ruwer de uniforme preto conferindo uma peça ao lado do capô aberto" loading="lazy"></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ OFICINA ============ -->
+<section class="sec light" id="oficina">
+  <div class="wrap">
+    <div class="shop-head">
+      <h2 class="display">A oficina em Brasília</h2>
+      <p class="lead">Dinamômetro no centro, piso epóxi e luz de LED. É aqui que cada carro é preparado e medido.</p>
+    </div>
+    <div class="shop">
+      <figure class="frame"><img src="../public/assets/img/oficina-e36.webp" alt="Dois BMW clássicos na oficina da Ruwer, com um terceiro no dinamômetro ao fundo" loading="lazy"></figure>
+      <figure class="frame"><img src="../public/assets/img/oficina-civic.webp" alt="Honda Civic Type R vermelho sobre o dinamômetro da Ruwer, com o capô aberto" loading="lazy"></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DÚVIDAS ============ -->
+<section class="sec concrete" id="duvidas">
+  <div class="wrap faq">
+    <h2 class="display">Dúvidas antes de agendar</h2>
+    <div>
+      <details><summary>O remap afeta a garantia do carro?</summary><p>Pode afetar. Depende da marca e do contrato da sua garantia. Na avaliação a gente explica o que muda no seu caso, antes de qualquer serviço.</p></details>
+      <!-- CONFIRMAR COM A OFICINA: guardam o arquivo original da ECU? -->
+      <details><summary>Dá para voltar ao mapa original?</summary><p>Sim. Guardamos o arquivo original da sua ECU antes de qualquer alteração, e o mapa pode ser regravado.</p></details>
+      <details><summary>Quanto custa?</summary><p>Depende do carro, do stage e das peças. Você recebe o valor fechado depois da avaliação, antes de autorizar o serviço.</p></details>
+      <details><summary>Meu carro aceita preparação?</summary><p>Mande marca, modelo e ano pelo WhatsApp e confirmamos se ele aceita o serviço que você quer.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ AGENDAR ============ -->
+<section class="sec red" id="agendar">
+  <div class="wrap cta">
+    <div>
+      <h2 class="display">Seu carro na próxima vaga do dyno</h2>
+      <p class="lead">Conte o modelo e o que você quer. A mensagem já vai pronta para o nosso WhatsApp.</p>
+    </div>
+    <form id="form">
+      <div><label for="fName">Seu nome</label><input class="field" id="fName" autocomplete="name" required></div>
+      <div><label for="fCar">Carro (marca, modelo e ano)</label><input class="field" id="fCar" placeholder="Ex.: Golf GTI 2019" required></div>
+      <div><label for="fSvc">O que você precisa</label>
+        <select class="field" id="fSvc"><option>Remap de ECU</option><option>Dinamômetro</option><option>Escape e admissão</option><option>Suspensão e freios</option><option>Mecânica de precisão</option><option>Ainda não sei</option></select></div>
+      <button class="btn dark" type="submit">Enviar pelo WhatsApp</button>
+    </form>
+  </div>
+</section>
+
+</main>
+
+<footer class="sec dark">
+  <div class="wrap">
+    <div class="foot">
+      <div><a class="brand" href="#topo" aria-label="Ruwer Garage"><img src="../public/assets/img/logo.webp" alt="Ruwer Garage" width="965" height="265"></a><p class="muted" style="margin-top:20px;max-width:32ch">Preparação automotiva e dinamômetro em Brasília.</p></div>
+      <div><h3>Navegue</h3><ul><li><a href="#servicos">Serviços</a></li><li><a href="#resultados">Resultados</a></li><li><a href="#processo">Processo</a></li><li><a href="#duvidas">Dúvidas</a></li></ul></div>
+      <div><h3>Fale com a gente</h3><ul><li><a href="https://instagram.com/ruwer.garage" rel="noopener">@ruwer.garage</a></li><li><a href="#agendar">WhatsApp</a></li><!-- PREENCHER: endereço e horário --><li class="muted">Brasília, DF</li></ul></div>
+    </div>
+    <div class="legal">© 2026 Ruwer Garage. Todos os direitos reservados.</div>
+  </div>
+</footer>
+
+<!-- Bibliotecas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<!-- Código do site (scripts clássicos: funcionam também abrindo o arquivo direto) -->
+<script src="js/config.js"></script>
+<script src="js/core.js"></script>
+<script src="js/walk.js"></script>
+<script src="js/services.js"></script>
+<script src="js/results.js"></script>
+<script src="js/form.js"></script>
+</body>
+</html>

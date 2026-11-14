@@ -1,0 +1,25 @@
+/* =====================================================================
+   INTERFACE DE REFERÊNCIA (tokens lidos do projeto Framer) aplicada à Ruwer Garage
+   Preto #070303 | Branco #FFF9F3 | Fundo #F6F2EF | Cartão #EAE5E1 | Vermelho #DB3019
+   Archivo (títulos) | Inter (texto) | IBM Plex Mono (botões e etiquetas)
+   ===================================================================== */
+:root{--black:#070303;--white:#FFF9F3;--bg:#F6F2EF;--fg:#EAE5E1;--red:#DB3019;
+--glass:rgba(7,3,3,.2);--sd:rgba(251,251,251,.08);--sl:rgba(7,3,3,.08);--b70:rgba(6,1,0,.7);--w70:rgba(251,251,251,.7);
+--mut:rgba(255,249,243,.7);--faint:rgba(255,249,243,.5);--line:rgba(251,251,251,.1);--edge:rgba(219,48,25,.28);--glass-solid:rgba(7,3,3,.92);
+--hero-img:none;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--black:#070303}}
+:root[data-theme="dark"]{--black:#070303}
+*{box-sizing:inherit;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:calc(90px + env(safe-area-inset-top,0px))}
+body{background:var(--black);color:var(--black);font-family:'Inter',sans-serif;font-size:1rem;line-height:1.5;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+h1,h2,h3,h4{font-family:'Archivo',sans-serif;font-weight:400;letter-spacing:0}
+.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+.sec{position:relative;padding:clamp(80px,9vw,128px) 0;overflow:hidden}
+.sec.dark{background:var(--black);color:var(--white)}
+.sec.light{background:var(--bg);color:var(--black)}
+.sec.card{background:var(--fg);color:var(--black)}
+.sec p{color:inherit}
+.muted{opacity:.7}

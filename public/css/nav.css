@@ -1,0 +1,49 @@
+/* ===== NAV: barra fixa e menu de serviços ===== */
+/* ---------- NAV (barra fixa, pílulas mono) ---------- */
+.nav{position:fixed;top:0;left:0;right:0;z-index:20;background:rgba(7,3,3,.8);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);padding-top:env(safe-area-inset-top,0px);animation:navin .8s cubic-bezier(.44,0,.56,1) .4s backwards}
+@keyframes navin{from{opacity:0;transform:translateY(-16px)}}
+.nav-in{max-width:1200px;margin:0 auto;padding:0 32px;height:68px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;transition:height .4s}
+.nav.min .nav-in{height:60px}
+.nav-cta{justify-self:end}
+.links{display:flex;gap:8px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--sd);background:rgba(7,3,3,.7);color:var(--white);font:500 12px/16px 'IBM Plex Mono',monospace;letter-spacing:.75px;text-transform:uppercase;cursor:pointer;transition:border-color .3s,background-color .3s}
+.pill:hover{border-color:rgba(219,48,25,.6);background:#1b1010}
+.pill svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.6}
+.dd{position:relative}
+.dd-menu{position:absolute;left:0;top:100%;padding-top:8px;min-width:260px;opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s .25s}
+.dd:hover .dd-menu,.dd:focus-within .dd-menu{opacity:1;visibility:visible;transition:opacity .25s}
+.dd-box{background:var(--black);border:1px solid var(--sd);border-radius:10px;padding:8px;display:grid;gap:2px}
+.dd-box a{padding:10px 12px;border-radius:6px;font:500 12px/16px 'IBM Plex Mono',monospace;letter-spacing:.75px;text-transform:uppercase;color:var(--white)}
+.dd-box a:hover{background:#1b1010}
+
+/* ===== Botões do header (v3): minimalista ===== */
+/* links: só texto, com um fio fino que aparece embaixo */
+.links{gap:28px}
+.pill{position:relative;border:0;background:transparent;border-radius:0;min-height:36px;padding:0;gap:6px;color:var(--w70);letter-spacing:.75px;transition:color .25s}
+.pill::after{content:'';position:absolute;left:0;right:0;bottom:4px;height:1px;background:currentColor;transform:scaleX(0);transform-origin:left;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.pill:hover,.pill:focus-visible,.pill[aria-current="true"]{color:var(--white);background:transparent}
+.pill:hover::after,.pill:focus-visible::after,.pill[aria-current="true"]::after{transform:scaleX(1)}
+.pill svg{width:10px;height:10px;transition:transform .3s}
+.dd:hover .pill svg,.dd:focus-within .pill svg{transform:rotate(180deg)}
+
+/* menu suspenso: caixa simples */
+.dd-box{background:rgba(7,3,3,.96);box-shadow:none;transform:translateY(-4px);transition:transform .25s ease}
+.dd:hover .dd-box,.dd:focus-within .dd-box{transform:none}
+.dd-box a{display:block;padding:11px 14px;color:var(--w70);transition:color .2s,background-color .2s}
+.dd-box a:hover,.dd-box a:focus-visible{color:var(--white);background:rgba(255,249,243,.06)}
+
+/* botão principal: contorno fino, preenche de branco ao passar o mouse */
+.nav-cta.btn{background:transparent;color:var(--white);border:1px solid rgba(255,249,243,.55);border-radius:999px;min-height:38px;padding:0 20px;white-space:nowrap;box-shadow:none;transition:background-color .25s,color .25s,border-color .25s}
+.nav-cta.btn:hover,.nav-cta.btn:focus-visible{background:var(--white);color:var(--black);border-color:var(--white);box-shadow:none}
+@media (max-width:520px){.nav-cta.btn{padding:0 16px;font-size:12px}}
+
+/* espaço do menu em telas médias */
+.nav-in{grid-template-columns:auto 1fr auto}
+.links{justify-self:center}
+@media (max-width:860px){.nav-in{grid-template-columns:1fr auto}}
+
+/* botão do Instagram (ícone, minimalista) */
+.nav-right{justify-self:end;display:flex;align-items:center;gap:12px}
+.ig{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(255,249,243,.25);color:var(--w70);transition:color .25s,border-color .25s,background-color .25s}
+.ig svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ig:hover,.ig:focus-visible{color:var(--black);background:var(--white);border-color:var(--white)}

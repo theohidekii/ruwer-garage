@@ -1,0 +1,24 @@
+/* ==========================================================
+   CAMINHADA (hero) — canvas do galpão, textos e pontos clicáveis
+   ========================================================== */
+.walk{position:relative;height:420vh}
+.stage{position:sticky;top:0;height:100vh;overflow:hidden;background:#000}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+.scrim{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,.82) 0%,rgba(0,0,0,.35) 42%,rgba(0,0,0,0) 70%)}
+.hero-copy{position:absolute;left:var(--pad);bottom:11vh;max-width:min(860px,88vw);will-change:opacity,transform}
+.hero-copy h1{font-size:clamp(40px,6.6vw,108px);margin-bottom:26px}
+.hero-copy p{margin-bottom:34px}
+.hero-copy .row{display:flex;gap:28px;align-items:center;flex-wrap:wrap}
+.cue{position:absolute;right:var(--pad);bottom:11vh;font-size:14px;color:var(--mute);writing-mode:vertical-rl;letter-spacing:.08em}
+.cue::after{content:"";display:block;width:2px;height:56px;background:var(--red);margin:14px auto 0}
+.endcard{position:absolute;left:var(--pad);bottom:11vh;max-width:min(780px,88vw);opacity:0;pointer-events:none}
+.endcard h2{font-size:clamp(36px,5.4vw,84px);margin-bottom:28px}
+
+/* pontos do galpão (hotspots) */
+.hs{position:absolute;left:0;top:0;opacity:0;pointer-events:none;display:flex;align-items:center;gap:14px;transform:translate(-9999px,0);will-change:transform,opacity;background:none;border:0;text-align:left;cursor:pointer}
+.hs i{flex:none;width:22px;height:22px;background:var(--red);transform:skewX(-14deg);box-shadow:0 0 0 5px rgba(225,11,23,.28)}
+.hs b{display:block;font-stretch:125%;font-style:italic;font-weight:900;text-transform:uppercase;font-size:clamp(15px,1.6vw,22px);line-height:1}
+.hs span{display:block;font-size:14px;color:#e6e6e6;margin-top:4px}
+.hs .t{background:rgba(0,0,0,.72);padding:10px 16px}
+.hs:hover .t,.hs:focus-visible .t{background:var(--red)}
+@media(max-width:700px){.hs span{display:none}}

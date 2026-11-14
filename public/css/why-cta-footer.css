@@ -1,0 +1,51 @@
+/* ===== POR QUE ESCOLHER, CTA com formulário, RODAPÉ e revelação ao rolar ===== */
+/* ---------- POR QUE ESCOLHER ---------- */
+.why{display:grid;grid-template-columns:1fr 1fr;gap:clamp(40px,8vw,120px);align-items:start}
+.why .ph-box{aspect-ratio:1/1.13}
+.feats{display:grid;gap:32px;padding-top:8px}
+.feat{display:grid;grid-template-columns:36px 1fr;gap:6px 14px}
+.ico{width:36px;height:36px;border-radius:8px;background:var(--black);display:grid;place-items:center}
+.ico svg{width:20px;height:20px;stroke:var(--red);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.feat h3{font:500 20px/36px 'Archivo',sans-serif}
+.feat p{grid-column:2;font-size:16px;line-height:24px;opacity:.7}
+
+/* ---------- CTA com formulário + RODAPÉ ---------- */
+.cta{padding:clamp(60px,7vw,96px) 0 0}
+.cta-card{display:grid;grid-template-columns:1fr 1fr;gap:32px;padding:16px;border-radius:16px;background:rgba(7,3,3,.82);border:1px solid var(--sd);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);min-height:520px}
+.cta-l{padding:32px 24px;display:flex;flex-direction:column;justify-content:space-between;gap:40px}
+.cta-l h2{font:500 clamp(2rem,3.6vw,48px)/1.08 'Archivo',sans-serif;margin-top:16px;color:var(--white);max-width:11ch}
+.cta-l p{color:var(--w70);max-width:38ch;margin-top:16px;font-size:16px;line-height:24px}
+.cinfo{display:grid;gap:16px}
+.ci{display:flex;gap:14px;align-items:center}
+.ci .ico{background:#1b1010}
+.ci b{display:block;font:500 16px/22px 'Inter',sans-serif;color:var(--white)}
+.ci span{font-size:14px;color:var(--w70)}
+.form-card{background:var(--bg);color:var(--black);border-radius:12px;padding:32px}
+.form-card h3{font:500 24px/32px 'Archivo',sans-serif}
+.form-card .sub{font-size:16px;opacity:.7;margin:4px 0 24px}
+.fld{display:block;margin-bottom:18px}
+.fld span{display:block;font:500 16px/24px 'Inter',sans-serif;margin-bottom:6px}
+.fld input,.fld select,.fld textarea{width:100%;border:1px solid transparent;background:#dedad7;border-radius:6px;padding:12px 14px;font:400 14px/20px 'Inter',sans-serif;color:var(--black);outline:none;transition:border-color .3s,box-shadow .3s}
+.fld textarea{min-height:96px;resize:vertical}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(219,48,25,.15)}
+.fld input::placeholder,.fld textarea::placeholder{color:rgba(7,3,3,.5)}
+.form-card .btn{width:100%;min-height:48px;margin-top:6px}
+
+footer{background:var(--black);color:var(--white);padding:80px 0 0;position:relative;overflow:hidden}
+.fgrid{display:grid;grid-template-columns:1.3fr 1.6fr 1fr 1fr;gap:32px}
+footer h4{font:400 12px/16px 'IBM Plex Mono',monospace;letter-spacing:.75px;text-transform:uppercase;color:var(--w70);margin-bottom:20px}
+footer address{font-style:normal;font-size:15px;line-height:24px;color:var(--w70);margin-bottom:20px}
+footer .fl{display:block;font:500 14px/16px 'IBM Plex Mono',monospace;text-transform:uppercase;padding:9px 0;color:var(--white);transition:color .3s}
+footer .fl:hover{color:var(--red)}
+.bigmark{margin-top:72px;display:flex;align-items:flex-end;gap:2vw;color:var(--red);opacity:.5;-webkit-mask-image:linear-gradient(180deg,#000 30%,transparent 100%);mask-image:linear-gradient(180deg,#000 30%,transparent 100%);user-select:none}
+.bigmark svg{height:clamp(80px,17vw,220px);width:auto;color:var(--red)}
+.bigmark span{font:500 clamp(90px,19vw,260px)/.9 'Archivo',sans-serif;letter-spacing:-.02em}
+.legal{border-top:1px solid var(--sd);margin-top:8px;padding:24px 0 28px;font-size:12px;color:var(--w70);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+/* revelação ao rolar */
+.rv{opacity:0;translate:0 22px;transition:opacity .9s ease,translate .9s cubic-bezier(.2,.8,.2,1)}
+.rv.in{opacity:1;translate:0 0}
+
+.brand svg,.bigmark svg{color:var(--red)}
+
+.bigmark img{height:clamp(80px,17vw,220px);width:auto;display:block}

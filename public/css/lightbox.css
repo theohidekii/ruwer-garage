@@ -1,0 +1,12 @@
+/* ===== LIGHTBOX da galeria ===== */
+.lb{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.95);opacity:0;visibility:hidden;transition:opacity .5s ease,visibility 0s linear .5s;display:flex;align-items:center;justify-content:center;padding:clamp(56px,8vh,90px) clamp(16px,6vw,110px)}
+.lb.on{opacity:1;visibility:visible;transition:opacity .5s ease}
+.lb-f{margin:0;max-width:100%;max-height:100%;display:flex;flex-direction:column;align-items:center;gap:16px}
+.lb-f img{max-width:100%;max-height:calc(100vh - 190px);object-fit:contain;border-radius:8px;transition:opacity .25s ease;box-shadow:0 40px 100px -30px #000}
+.lb-f figcaption{font-size:.92rem;color:var(--mut);text-align:center}
+.lb-x,.lb-n{position:absolute;display:grid;place-items:center;width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);color:#fff;cursor:pointer;transition:border-color .3s,background-color .3s}
+.lb-x:hover,.lb-n:hover,.lb-x:focus-visible,.lb-n:focus-visible{border-color:var(--red);background:rgba(230,28,28,.18)}
+.lb-x{top:calc(18px + env(safe-area-inset-top,0px));right:clamp(16px,3vw,36px)}
+.lb-n{top:50%;margin-top:-24px}.lb-n.prev{left:clamp(12px,2.4vw,32px)}.lb-n.next{right:clamp(12px,2.4vw,32px)}
+.lb svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.lb-c{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom,0px));font-size:.85rem;color:var(--faint);letter-spacing:.06em}

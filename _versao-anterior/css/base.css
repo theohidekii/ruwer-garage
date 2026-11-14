@@ -1,0 +1,38 @@
+/* ==========================================================
+   BASE — tokens, reset, tipografia e superfícies de seção
+   ========================================================== */
+:root{
+  --black:#000; --white:#fff; --red:#e10b17; --red-dark:#a30810;
+  --floor:#d4d5d8;          /* concreto polido do galpão */
+  --graphite:#232426;
+  --line-dark:#26272a;
+  --ink-2:#55575c;          /* texto secundário sobre claro */
+  --mute:#a3a6ac;           /* texto secundário sobre escuro */
+  --pad:clamp(20px,5vw,72px);
+  --cut:clamp(36px,5.5vw,96px);   /* corte diagonal entre seções (ângulo do logo) */
+  --f:"Archivo",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--black);scroll-padding-top:72px}
+html.lenis{height:auto}
+body{font-family:var(--f);font-stretch:100%;font-weight:400;font-size:18px;line-height:1.6;color:var(--white);background:var(--black);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button,input,select{font:inherit;color:inherit}
+img,video{display:block;max-width:100%}
+:focus-visible{outline:3px solid var(--white);outline-offset:3px}
+.light :focus-visible,.concrete :focus-visible{outline-color:var(--black)}
+
+/* ===== Tipografia ===== */
+.display{font-stretch:125%;font-style:italic;font-weight:900;text-transform:uppercase;line-height:.9;letter-spacing:-.01em}
+h2.display{font-size:clamp(38px,5.6vw,88px)}
+.lead{max-width:46ch;font-size:clamp(17px,1.4vw,20px);line-height:1.6}
+
+/* ===== Seções com corte diagonal ===== */
+.sec{position:relative;clip-path:polygon(0 var(--cut),100% 0,100% 100%,0 100%);margin-top:calc(var(--cut)*-1);padding:calc(var(--cut) + clamp(72px,10vw,140px)) var(--pad) clamp(72px,10vw,140px)}
+.light{background:var(--white);color:var(--black)}
+.concrete{background:var(--floor);color:var(--black)}
+.dark{background:var(--black);color:var(--white)}
+.red{background:var(--red);color:var(--white)}
+.wrap{max-width:1280px;margin:0 auto}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}

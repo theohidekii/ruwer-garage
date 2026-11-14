@@ -1,0 +1,29 @@
+/* ===== COMPONENTES: etiquetas, botões, vidro, logo ===== */
+/* ---------- etiquetas (mono) e botões ---------- */
+.chip-l{display:inline-flex;align-items:center;gap:8px;padding:4px 8px;border-radius:4px;background:var(--black);color:var(--white);font:400 12px/16px 'IBM Plex Mono',monospace;letter-spacing:.75px;text-transform:uppercase}
+.chip-l::before{content:'';width:8px;height:8px;background:var(--red);border-radius:1px}
+.dark .chip-l{background:transparent;border:1px solid var(--sd)}
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:44px;padding:0 20px;border-radius:8px;border:1px solid var(--sd);background:var(--black);color:var(--white);font:500 14px/16px 'IBM Plex Mono',monospace;letter-spacing:0;text-transform:uppercase;cursor:pointer;transition:background-color .3s,border-color .3s,box-shadow .4s,color .3s}
+.btn:hover,.btn:focus-visible{background:#1b1010;border-color:rgba(219,48,25,.55)}
+.btn.red{background:var(--red);border-color:var(--red)}
+.btn.red:hover,.btn.red:focus-visible{background:#ec3a22;border-color:#ff6b55;box-shadow:0 0 28px -4px rgba(219,48,25,.7)}
+.btn.light{background:var(--white);color:var(--black);border-color:var(--white)}
+.btn.light:hover{background:#fff;box-shadow:0 0 24px -6px rgba(255,249,243,.6)}
+.btn.lgb{min-height:44px;padding:0 20px;font-size:16px;line-height:24px}
+.btn.sm{min-height:40px;padding:0 16px;font-size:13px}
+.btn .sq{width:8px;height:8px;background:var(--red);border-radius:1px}
+.btn.glass{background:var(--glass);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* vidro (cartões, painel do chat) */
+.lg{background:rgba(7,3,3,.55);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);border:1px solid var(--sd);box-shadow:0 30px 70px -30px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.12)}
+
+/* ---------- logo ---------- */
+.brand{display:inline-flex;align-items:center;gap:10px;color:var(--white)}
+.brand svg{height:28px;width:auto;display:block}
+.bw{font:500 26px/1 'Archivo',sans-serif}
+.bs{font:400 10px/1 'IBM Plex Mono',monospace;letter-spacing:.75px;text-transform:uppercase;color:var(--w70);align-self:flex-end;padding-bottom:4px}
+
+/* logo oficial (imagem com fundo transparente) */
+.brand img{display:block;height:34px;width:auto}
+.nav.min .brand img{height:30px}
