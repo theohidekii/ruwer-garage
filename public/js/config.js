@@ -15,6 +15,6 @@ window.RUWER = (function () {
     $, reduce, NUM, WA, waLink,
     state: { mode: 'site', busy: false, savedY: 0 },        // site | 3d
     mouse: { x: 0, y: 0, tx: 0, ty: 0 },                    // parallax da câmera 3D
-    st: { y: 2.5, ly: 2.4, ld: 34, fov: 42 }                // estado extra da câmera (Z é animado direto)
+    st: { a: 0, rad: 31, h: 2.3, ty: 1.4 }                  // câmera 3D em órbita do carro: ângulo, distância, altura, altura do alvo
   };
 })();

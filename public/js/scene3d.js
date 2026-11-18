@@ -1,162 +1,430 @@
 /* ==========================================================
-   MÓDULO 3D: oficina em Three.js (criada só no primeiro clique, a landing fica leve)
+   MÓDULO 3D: oficina em Three.js (criada só no primeiro clique em "Entrar na Oficina 3D", a landing fica leve)
+   Cenário: galpão escuro, piso de epóxi espelhado, fitas de LED em "V" no teto, rasgos de luz na parede
+   do fundo, letreiro neon, fumaça e o carro da Ruwer no centro. Bloom por EffectComposer + UnrealBloomPass.
+   A câmera é guiada por RUWER.st (coordenadas polares ao redor do carro), animado em transition.js.
    ========================================================== */
 (function () {
 const { $, reduce, st, mouse } = RUWER;
-let renderer = null, camera = null, portrait = false, step = () => {}, resize = () => {};
-const DPR = Math.min(devicePixelRatio, 1.5);   // limite de DPR protege os 60 FPS
 
-function init3D(){
-  if(renderer) return true;
-  try{renderer=new THREE.WebGLRenderer({canvas:$('#gl'),antialias:true,powerPreference:'high-performance'})}catch(e){renderer=null;return false}
-  renderer.setPixelRatio(DPR); renderer.setClearColor(0x000000);
-  const scene=new THREE.Scene();
-  scene.background=new THREE.Color(0x000000);
-  scene.fog=new THREE.FogExp2(0x000000,.017);
-  camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,.1,160);
-  camera.position.set(0,2.5,46);
+/* qualidade x desempenho */
+const Q = {
+  MAX_DPR: 1.5,          // limite do pixel ratio: telas 3x renderizam como 1,5x (grande ganho de FPS)
+  MIRROR_SCALE: 0.5,     // o reflexo do piso é renderizado na metade da resolução
+  BLOOM: { strength: 0.7, radius: 0.6, threshold: 0.15 },
+  SMOKE: 14,             // quantidade de nuvens de fumaça
+  DUST: 260              // partículas de poeira nos feixes de luz
+};
+/* celular e tablet (toque): menos pixels e menos partículas, para manter a fluidez */
+if (matchMedia('(pointer: coarse)').matches || innerWidth < 860) {
+  Q.MAX_DPR = 1.25; Q.MIRROR_SCALE = 0.35; Q.SMOKE = 8; Q.DUST = 120;
+}
 
-  /* ================================================================
-     // CARREGAR MODELO .GLB DA OFICINA AQUI
-     // 1) inclua GLTFLoader (examples/js/loaders/GLTFLoader.js, r128)
-     // 2) new THREE.GLTFLoader().load('oficina.glb', g => scene.add(g.scene))
-     // 3) a estrutura abaixo (corredor, piso reflexivo, luzes neon vermelhas,
-     //    pedestal e letreiro) é a base procedural até o modelo ficar pronto.
-     ================================================================ */
-  const RED=0xe61c1c;
-  const neon=new THREE.MeshBasicMaterial({color:RED});   // materiais "emissivos": o bloom pega estes
-  const white=new THREE.MeshBasicMaterial({color:0xffffff});
-  const dark=new THREE.MeshStandardMaterial({color:0x0b0b0e,roughness:.65,metalness:.35});
+  let renderer, scene, camera, composer = null, mirror = null;
+  let W = innerWidth, H = innerHeight, DPR = 1, portrait = false;
+  const animated = [];                         // funções chamadas a cada quadro (fumaça, neon, poeira)
 
-  /* ---- Estrutura: paredes, teto, parede do fundo e porta ---- */
-  function slab(w,h,d,x,y,z,m){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m||dark);o.position.set(x,y,z);scene.add(o);return o}
-  slab(.4,8.4,120,-8.2,4.2,-10); slab(.4,8.4,120,8.2,4.2,-10);      // paredes laterais
-  slab(16.8,.4,120,0,8.4,-10);                                        // teto
-  slab(17,9,.5,0,4.5,-52.5);                                          // parede do fundo
-  slab(3.7,8.4,.5,-6.35,4.2,30); slab(3.7,8.4,.5,6.35,4.2,30);       // frente: lados da porta
-  slab(9,2.9,.5,0,6.95,30);                                           // verga da porta
-  // contorno neon da porta (abertura 9 x 5,5)
-  slab(.14,5.5,.14,-4.5,2.75,29.8,neon); slab(.14,5.5,.14,4.5,2.75,29.8,neon); slab(9.14,.14,.14,0,5.5,29.8,neon);
+  /* three r128 não faz gestão de cor sozinho: convertemos as cores da marca de sRGB para linear,
+     e o passe final de gamma devolve para sRGB. Assim o #E61C1C na tela é o #E61C1C da marca. */
+  const col = hex => new THREE.Color(hex).convertSRGBToLinear();
+  const RED = 0xE61C1C, WHITE = 0xFFFFFF, BLACK = 0x050505;
 
-  /* ---- Helper: InstancedMesh (centenas de peças em 1 draw call) ---- */
-  function inst(geo,mat,pts){const m=new THREE.InstancedMesh(geo,mat,pts.length),d=new THREE.Object3D();
-    pts.forEach((p,i)=>{d.position.set(p[0],p[1],p[2]);d.updateMatrix();m.setMatrixAt(i,d.matrix)});scene.add(m)}
-  const zs=[];for(let z=26;z>=-48;z-=6)zs.push(z);
-  const zs2=[];for(let z=28;z>=-50;z-=4)zs2.push(z);
-  // pilastras nas paredes e vigas no teto: dão escala e ritmo ao corredor
-  inst(new THREE.BoxGeometry(.5,8,.6),dark,zs2.flatMap(z=>[[-7.8,4,z],[7.8,4,z]]));
-  inst(new THREE.BoxGeometry(16,.4,.5),dark,zs.map(z=>[0,8,z-3]));
-  // LUZES DO TETO: fileiras brancas segmentadas + linhas vermelhas contínuas que levam o olhar ao fundo
-  inst(new THREE.BoxGeometry(.3,.12,3.4),white,zs.flatMap(z=>[[-2,7.9,z],[2,7.9,z]]));
-  slab(.14,.14,110,-5.2,7.9,-10,neon); slab(.14,.14,110,5.2,7.9,-10,neon);
-  slab(.12,.12,110,-7.5,.18,-10,neon); slab(.12,.12,110,7.5,.18,-10,neon);   // rodapé neon
-  slab(.08,.02,110,-3.2,.03,-10,neon); slab(.08,.02,110,3.2,.03,-10,neon);   // trilhos LED no piso
+  function init(canvas) {
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', stencil: false });
+    DPR = Math.min(devicePixelRatio || 1, Q.MAX_DPR);
+    renderer.setPixelRatio(DPR);
+    renderer.setClearColor(col(BLACK));
 
-  /* ---- Piso hiper-reflexivo (epóxi molhado) ----
-     Reflector = espelho real da cena; por cima, um plano preto semitransparente com
-     roughness mínimo escurece o reflexo e cria o aspecto de epóxi polido. */
-  const FG=new THREE.PlaneGeometry(16.4,130); let mir=null;
-  if(THREE.Reflector){
-    mir=new THREE.Reflector(FG,{color:0x888888,clipBias:.003,textureWidth:Math.floor(innerWidth*DPR*.5),textureHeight:Math.floor(innerHeight*DPR*.5)});
-    mir.rotation.x=-Math.PI/2; mir.position.set(0,0,-10); scene.add(mir)}
-  const sheen=new THREE.Mesh(FG,new THREE.MeshStandardMaterial({color:0x020203,roughness:.07,metalness:.92,transparent:true,opacity:mir?.5:1}));
-  sheen.rotation.x=-Math.PI/2; sheen.position.set(0,.004,-10); scene.add(sheen);
+    scene = new THREE.Scene();
+    scene.background = col(BLACK);
+    scene.fog = new THREE.FogExp2(col(BLACK).getHex(), 0.021);      // névoa: profundidade e atmosfera esfumaçada
 
-  /* ---- Iluminação ---- */
-  scene.add(new THREE.AmbientLight(0x200000,.9));
-  [24,4,-16,-36].forEach(z=>{const p=new THREE.PointLight(RED,1.1,28,2);p.position.set(0,6.4,z);scene.add(p)}); // vermelho se espalha nas paredes
-  const spot=new THREE.SpotLight(0xffffff,4.2,48,.42,.7,1.5);   // holofote sobre o pedestal
-  spot.position.set(0,13,-38); spot.target.position.set(0,0,-38); scene.add(spot,spot.target);
-  const gc=document.createElement('canvas');gc.width=4;gc.height=256;const gx=gc.getContext('2d'),gg=gx.createLinearGradient(0,0,0,256);
-  gg.addColorStop(0,'#fff');gg.addColorStop(1,'#000');gx.fillStyle=gg;gx.fillRect(0,0,4,256);
-  const cone=new THREE.Mesh(new THREE.ConeGeometry(6.4,13,48,1,true),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.1,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,alphaMap:new THREE.CanvasTexture(gc)}));
-  cone.position.set(0,6.5,-38); scene.add(cone);                  // feixe volumétrico falso
+    camera = new THREE.PerspectiveCamera(40, W / H, 0.1, 140);
 
-  /* ---- Pedestal central (para parar a câmera aqui) ---- */
-  const base=new THREE.Mesh(new THREE.CylinderGeometry(4.6,4.8,.25,64),new THREE.MeshStandardMaterial({color:0x08080a,roughness:.25,metalness:.9}));
-  base.position.set(0,.125,-38); scene.add(base);
-  const halo=new THREE.Mesh(new THREE.TorusGeometry(4.7,.045,8,96),neon);       // aro neon do pedestal
-  halo.rotation.x=Math.PI/2; halo.position.set(0,.27,-38); scene.add(halo);
-  // baia demarcada no piso:
-  slab(14,.03,.1,0,.03,-34.2,neon); slab(14,.03,.1,0,.03,-41.8,neon); slab(.1,.03,7.6,-7,.03,-38,neon); slab(.1,.03,7.6,7,.03,-38,neon);
+    buildHall();
+    buildFloor();
+    buildNeon();
+    buildBackWall();
+    buildLights();
+    buildSmoke();
+    buildCar();
+    buildPost();
+    resize();
+  }
 
-  /* ============================================================
-     // INSERIR MODELO 3D DO CARRO AQUI
-     // 1) carregue GLTFLoader (examples/js/loaders/GLTFLoader.js, r128)
-     // 2) new THREE.GLTFLoader().load('carro.glb', g => car.add(g.scene))
-     // 3) apague as partes do placeholder abaixo e mantenha o grupo "car"
-     ============================================================ */
-  const car=new THREE.Group();
-  const pm=new THREE.MeshStandardMaterial({color:0x07070a,metalness:.95,roughness:.18});
-  const em=new THREE.LineBasicMaterial({color:RED});
-  function part(geo,x,y,z){const m=new THREE.Mesh(geo,pm);m.position.set(x,y,z);m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),em));car.add(m)}
-  part(new THREE.BoxGeometry(4.8,.7,2.1),0,.8,0); part(new THREE.BoxGeometry(2.5,.62,1.8),-.3,1.45,0);
-  [[1.6,.38,1.05],[1.6,.38,-1.05],[-1.6,.38,1.05],[-1.6,.38,-1.05]].forEach(p=>{
-    const w=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.34,24),pm);w.rotation.x=Math.PI/2;w.position.set(p[0],p[1],p[2]);car.add(w)});
-  car.position.set(0,.25,-38); scene.add(car);
+  /* materiais compartilhados (menos programas de shader = menos trabalho para a GPU) */
+  const M = {};
+  function materials() {
+    M.dark  = new THREE.MeshStandardMaterial({ color: col(0x0b0b0d), roughness: 0.72, metalness: 0.35 });
+    M.neonW = new THREE.MeshBasicMaterial({ color: col(WHITE) });      // MeshBasic = "emissivo": é o que o bloom captura
+    M.neonR = new THREE.MeshBasicMaterial({ color: col(RED) });
+    M.warm  = new THREE.MeshBasicMaterial({ color: col(0xa89684) });
+  }
 
-  /* ---- Letreiro neon RUWER na parede do fundo ---- */
-  const sc=document.createElement('canvas');sc.width=1024;sc.height=400;
-  const sx=sc.getContext('2d'),tex=new THREE.CanvasTexture(sc);tex.encoding=THREE.sRGBEncoding;
-  function paint(){
-    sx.clearRect(0,0,1024,400);sx.textAlign='center';sx.textBaseline='middle';sx.lineJoin='round';
-    sx.font='800 270px "Archivo",Impact,sans-serif';if('letterSpacing' in sx)sx.letterSpacing='16px';
-    sx.shadowColor='#e61c1c';sx.shadowBlur=60;sx.lineWidth=16;sx.strokeStyle='#e61c1c';sx.strokeText('RUWER',512,150);
-    sx.shadowBlur=14;sx.lineWidth=5;sx.strokeStyle='#fff';sx.strokeText('RUWER',512,150);   // núcleo branco = tubo aceso
-    sx.font='700 64px "Archivo",Impact,sans-serif';if('letterSpacing' in sx)sx.letterSpacing='34px';
-    sx.shadowBlur=30;sx.fillStyle='#e61c1c';sx.fillText('GARAGE',512,330);tex.needsUpdate=true}
-  paint(); if(document.fonts)document.fonts.load('800 100px "Archivo"').then(paint);
-  const signMat=new THREE.MeshBasicMaterial({map:tex,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});
-  const sign=new THREE.Mesh(new THREE.PlaneGeometry(20,7.8),signMat);sign.position.set(0,5.6,-52);scene.add(sign);
-  const glow=new THREE.PointLight(RED,2.4,34,2);glow.position.set(0,5,-48);scene.add(glow);
+  /* helper: caixa simples */
+  function box(w, h, d, x, y, z, mat, parent) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    m.position.set(x, y, z); (parent || scene).add(m); return m;
+  }
+  /* helper: InstancedMesh — dezenas de peças iguais em UMA chamada de desenho */
+  function instances(geo, mat, list) {            // list: [{p:[x,y,z], r:[rx,ry,rz]}]
+    const mesh = new THREE.InstancedMesh(geo, mat, list.length), d = new THREE.Object3D();
+    list.forEach((it, i) => {
+      d.position.set(it.p[0], it.p[1], it.p[2]);
+      d.rotation.set(it.r ? it.r[0] : 0, it.r ? it.r[1] : 0, it.r ? it.r[2] : 0);
+      d.updateMatrix(); mesh.setMatrixAt(i, d.matrix);
+    });
+    scene.add(mesh); return mesh;
+  }
 
-  /* ---- Poeira nos feixes de luz ---- */
-  const N=reduce?0:300,pos=new Float32Array(N*3);
-  for(let i=0;i<N;i++){pos[i*3]=(Math.random()-.5)*14;pos[i*3+1]=Math.random()*7.5;pos[i*3+2]=Math.random()*80-50}
-  const dg=new THREE.BufferGeometry();dg.setAttribute('position',new THREE.BufferAttribute(pos,3));
-  scene.add(new THREE.Points(dg,new THREE.PointsMaterial({size:.06,color:0xffffff,transparent:true,opacity:.35,depthWrite:false,blending:THREE.AdditiveBlending})));
+  /* ---------- B1. Galpão industrial: paredes, teto, pilastras e vigas ----------
+     Eixos: o carro fica na origem; o corredor de entrada vem de +Z; a parede do letreiro fica em -Z. */
+  const HALL = { halfW: 11, height: 9, zFront: 46, zBack: -13 };
+  function buildHall() {
+    materials();
+    const len = HALL.zFront - HALL.zBack, zc = (HALL.zFront + HALL.zBack) / 2;
+    box(0.4, HALL.height, len, -HALL.halfW, HALL.height / 2, zc, M.dark);     // parede esquerda
+    box(0.4, HALL.height, len,  HALL.halfW, HALL.height / 2, zc, M.dark);     // parede direita
+    box(HALL.halfW * 2, 0.4, len, 0, HALL.height, zc, M.dark);                // teto
+    box(HALL.halfW * 2, HALL.height, 0.4, 0, HALL.height / 2, HALL.zBack, M.dark);   // parede do fundo
+    box(HALL.halfW * 2, HALL.height, 0.4, 0, HALL.height / 2, HALL.zFront, M.dark);  // parede da entrada
 
-  /* ---- BLOOM: EffectComposer + UnrealBloomPass ----
-     RenderPass -> UnrealBloomPass (glow do neon) -> GammaCorrection (sRGB final).
-     Se algum script não carregar, cai para render direto, sem quebrar a página. */
-  let composer=null,bloom=null;
-  if(THREE.EffectComposer&&THREE.UnrealBloomPass&&THREE.RenderPass&&THREE.ShaderPass){
-    try{
-      const rt=new THREE.WebGLMultisampleRenderTarget(innerWidth*DPR,innerHeight*DPR); // MSAA dentro do composer
-      composer=new THREE.EffectComposer(renderer,rt);
-      composer.addPass(new THREE.RenderPass(scene,camera));
-      bloom=new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),1.15,.6,.12); // força, raio, limiar
-      composer.addPass(bloom);
-      if(THREE.GammaCorrectionShader)composer.addPass(new THREE.ShaderPass(THREE.GammaCorrectionShader));
-    }catch(e){composer=null}}
-  if(!composer)renderer.outputEncoding=THREE.sRGBEncoding;
+    const pil = [], beams = [], bars = [];
+    for (let z = HALL.zFront - 3; z > HALL.zBack; z -= 4) {
+      pil.push({ p: [-HALL.halfW + 0.35, HALL.height / 2, z] }, { p: [HALL.halfW - 0.35, HALL.height / 2, z] });
+      /* barras de LED verticais nas paredes, como no galpão real da Ruwer */
+      bars.push({ p: [-HALL.halfW + 0.28, 3.2, z + 2] }, { p: [HALL.halfW - 0.28, 3.2, z + 2] });
+    }
+    for (let z = HALL.zFront - 4; z > HALL.zBack; z -= 6) beams.push({ p: [0, HALL.height - 0.45, z] });
+    instances(new THREE.BoxGeometry(0.5, HALL.height, 0.6), M.dark, pil);
+    instances(new THREE.BoxGeometry(HALL.halfW * 2, 0.5, 0.45), M.dark, beams);
+    instances(new THREE.BoxGeometry(0.05, 4.2, 0.07), M.warm, bars);
+  }
 
+  /* ---------- B2. Piso de epóxi hiper-reflexivo ----------
+     Reflector = espelho real da cena (renderizado em resolução reduzida).
+     Por cima, um plano escuro semitransparente e polido escurece o reflexo: é o que dá o aspecto de epóxi molhado. */
+  function buildFloor() {
+    const len = HALL.zFront - HALL.zBack, zc = (HALL.zFront + HALL.zBack) / 2;
+    const geo = new THREE.PlaneGeometry(HALL.halfW * 2, len);
+    if (THREE.Reflector) {
+      mirror = new THREE.Reflector(geo, {
+        color: 0x6f6f6f, clipBias: 0.003,
+        textureWidth: Math.floor(W * DPR * Q.MIRROR_SCALE), textureHeight: Math.floor(H * DPR * Q.MIRROR_SCALE)
+      });
+      mirror.rotation.x = -Math.PI / 2; mirror.position.set(0, 0, zc); scene.add(mirror);
+    }
+    const sheen = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+      color: col(0x030304), roughness: 0.08, metalness: 0.9, transparent: true, opacity: mirror ? 0.6 : 1
+    }));
+    sheen.rotation.x = -Math.PI / 2; sheen.position.set(0, 0.004, zc); scene.add(sheen);
 
+    /* aro neon no piso, marcando a baia do carro */
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(3.9, 0.03, 8, 120), M.neonR);
+    ring.rotation.x = Math.PI / 2; ring.position.y = 0.035; scene.add(ring);
+  }
 
-  let lastFov=0;
-  resize=function(){
-    const w=innerWidth,h=innerHeight;portrait=w/h<1;
-    renderer.setSize(w,h,false);if(composer)composer.setSize(w,h);
-    if(mir)mir.getRenderTarget().setSize(Math.floor(w*DPR*.5),Math.floor(h*DPR*.5));
-    camera.aspect=w/h;camera.updateProjectionMatrix()};
-  step=function(t){
-    camera.position.x=mouse.x*.6; camera.position.y=st.y+mouse.y*.25;      // parallax do mouse
-    const f=st.fov+(portrait?20:0); if(f!==lastFov){camera.fov=f;camera.updateProjectionMatrix();lastFov=f}
-    camera.lookAt(0,st.ly,camera.position.z-st.ld);
-    car.rotation.y+=.0035;
-    signMat.opacity=(.95+.05*Math.sin(t*3))*(Math.random()>.99?.6:1);       // cintilar do neon
-    for(let i=0;i<N;i++){pos[i*3+1]+=.004;if(pos[i*3+1]>7.5)pos[i*3+1]=0;pos[i*3]+=Math.sin(t+i)*.0012}
-    if(N)dg.attributes.position.needsUpdate=true;
-    composer?composer.render():renderer.render(scene,camera)};
-  resize();
+  /* ---------- B3. Neon do teto: linhas contínuas + fitas diagonais (chevrons) ---------- */
+  function buildNeon() {
+    const len = HALL.zFront - HALL.zBack - 2, zc = (HALL.zFront + HALL.zBack) / 2, y = HALL.height - 0.3;
+    /* linhas contínuas: levam o olhar até o fundo */
+    box(0.1, 0.08, len, -HALL.halfW + 1.2, y, zc, M.neonR);
+    box(0.1, 0.08, len,  HALL.halfW - 1.2, y, zc, M.neonR);
+    box(0.07, 0.07, len, -HALL.halfW + 0.3, 0.14, zc, M.neonR);    // rodapé
+    box(0.07, 0.07, len,  HALL.halfW - 0.3, 0.14, zc, M.neonR);
+    /* fitas diagonais: cada vão do galpão recebe um "V" de LED, alternando branco e vermelho */
+    const white = [], red = [], L = 8.4, ang = 0.52;
+    let i = 0;
+    for (let z = HALL.zFront - 7; z > HALL.zBack + 4; z -= 5.5, i++) {
+      const pair = [{ p: [-4.3, y, z], r: [0, ang, 0] }, { p: [4.3, y, z], r: [0, -ang, 0] }];
+      (i % 2 ? red : white).push(...pair);
+    }
+    const strip = new THREE.BoxGeometry(L, 0.07, 0.12);
+    instances(strip, M.neonW, white);
+    instances(strip, M.neonR, red);
+  }
+
+  /* ---------- B4. Parede do fundo: rasgos de luz diagonais (como nas fotos) + letreiro neon ---------- */
+  let signMat = null;
+  function buildBackWall() {
+    const z = HALL.zBack + 0.3;
+    /* rasgo branco à esquerda, rasgos vermelhos à direita */
+    const slash = (w, x, rot, mat) => { const m = box(w, 13, 0.06, x, 4.4, z, mat); m.rotation.z = rot; return m; };
+    slash(0.55, -7.6, 0.62, M.neonW);
+    slash(0.16, -6.2, 0.62, M.neonW);
+    slash(0.7, 7.4, -0.62, M.neonR);
+    slash(0.2, 5.9, -0.62, M.neonR);
+    /* linhas horizontais baixas, que o piso duplica */
+    box(8, 0.06, 0.06, -6.5, 0.9, z, M.neonW);
+    box(8, 0.06, 0.06, 6.5, 0.9, z, M.neonR);
+
+    /* letreiro: texto desenhado em canvas 2D e usado como textura (repinta quando a fonte Archivo carrega) */
+    const c = document.createElement('canvas'); c.width = 1024; c.height = 384;
+    const g = c.getContext('2d'), tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
+    function paint() {
+      g.clearRect(0, 0, 1024, 384); g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+      g.font = 'italic 800 230px "Archivo",Impact,sans-serif';
+      g.shadowColor = '#E61C1C'; g.shadowBlur = 50; g.lineWidth = 14; g.strokeStyle = '#E61C1C'; g.strokeText('RUWER', 512, 150);
+      g.shadowBlur = 10; g.lineWidth = 4; g.strokeStyle = '#FFFFFF'; g.strokeText('RUWER', 512, 150);   // núcleo branco = tubo aceso
+      g.font = '700 54px "Archivo",Impact,sans-serif'; if ('letterSpacing' in g) g.letterSpacing = '46px';
+      g.shadowBlur = 24; g.fillStyle = '#E61C1C'; g.fillText('GARAGE', 512, 318);
+      if ('letterSpacing' in g) g.letterSpacing = '0px';
+      tex.needsUpdate = true;
+    }
+    paint(); if (document.fonts && document.fonts.load) document.fonts.load('italic 800 100px "Archivo"').then(paint).catch(() => {});
+    signMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(11, 4.1), signMat);
+    sign.position.set(0, 5.9, z + 0.05); scene.add(sign);
+    /* o neon cintila de leve; de vez em quando falha por um quadro, como um tubo de verdade */
+    animated.push(t => { signMat.opacity = (0.94 + 0.06 * Math.sin(t * 3)) * (!reduce && Math.random() > 0.992 ? 0.55 : 1); });
+  }
+
+  /* ---------- B5. Iluminação ---------- */
+  function buildLights() {
+    scene.add(new THREE.AmbientLight(col(0x2a0a0a), 0.9));
+    /* vermelho se espalhando pelo corredor e pelas paredes */
+    [[0, 6.5, 34], [0, 6.5, 20], [7, 4, -8], [-2, 6, -9]].forEach(p => {
+      const l = new THREE.PointLight(col(RED), 1.0, 30, 2); l.position.set(p[0], p[1], p[2]); scene.add(l);
+    });
+    const rim = new THREE.PointLight(col(WHITE), 1.1, 22, 2); rim.position.set(-8, 4, -7); scene.add(rim);   // contraluz branca
+    /* holofote principal sobre o carro */
+    const spot = new THREE.SpotLight(col(WHITE), 2.2, 30, 0.6, 0.85, 1.4);
+    spot.position.set(1.5, 8.6, 4); spot.target.position.set(0, 0.5, 0); scene.add(spot, spot.target);
+  }
+
+  /* ---------- B6. Fumaça e poeira ----------
+     Fumaça = poucos sprites grandes com uma textura de nuvem gerada em canvas; derivam e giram devagar.
+     Metade puxa para o vermelho (como a fumaça iluminada das fotos). */
+  function buildSmoke() {
+    const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+    for (let i = 0; i < 46; i++) {
+      const x = 128 + (Math.random() - 0.5) * 120, y = 128 + (Math.random() - 0.5) * 120, r = 26 + Math.random() * 44;
+      const gr = g.createRadialGradient(x, y, 0, x, y, r);
+      gr.addColorStop(0, 'rgba(255,255,255,.085)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+    }
+    const tex = new THREE.CanvasTexture(c), puffs = [];
+    for (let i = 0; i < Q.SMOKE; i++) {
+      const red = i % 2 === 0;
+      const mat = new THREE.SpriteMaterial({ map: tex, color: col(red ? 0xff3a3a : 0xbfc4cc), transparent: true,
+        opacity: red ? 0.075 : 0.05, depthWrite: false, rotation: Math.random() * 6.28 });
+      const s = new THREE.Sprite(mat), near = i < Q.SMOKE * 0.65;     // a maioria fica ao redor do carro
+      const ang = Math.random() * 6.28, rr = 3.5 + Math.random() * 6;
+      s.position.set(near ? Math.cos(ang) * rr : (Math.random() - 0.5) * 14, 0.7 + Math.random() * 1.6,
+                     near ? Math.sin(ang) * rr - 2 : 10 + Math.random() * 26);
+      const k = 6 + Math.random() * 7; s.scale.set(k, k * 0.62, 1);
+      s.userData = { x: s.position.x, sp: 0.04 + Math.random() * 0.06, ph: Math.random() * 6.28, rot: (Math.random() - 0.5) * 0.02 };
+      scene.add(s); puffs.push(s);
+    }
+    if (!reduce) animated.push(t => {
+      for (let i = 0; i < puffs.length; i++) { const s = puffs[i], u = s.userData;
+        s.position.x = u.x + Math.sin(t * u.sp + u.ph) * 1.6; s.material.rotation += u.rot * 0.05; }
+    });
+
+    /* poeira suspensa nos feixes */
+    const N = reduce ? 0 : Q.DUST, pos = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) { pos[i * 3] = (Math.random() - 0.5) * 18; pos[i * 3 + 1] = Math.random() * 8; pos[i * 3 + 2] = Math.random() * 52 - 12; }
+    const dg = new THREE.BufferGeometry(); dg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    scene.add(new THREE.Points(dg, new THREE.PointsMaterial({ size: 1.6, sizeAttenuation: false, color: col(WHITE), transparent: true, opacity: 0.32, depthWrite: false, blending: THREE.AdditiveBlending })));
+    if (N) animated.push(t => {
+      for (let i = 0; i < N; i++) { pos[i * 3 + 1] += 0.003; if (pos[i * 3 + 1] > 8) pos[i * 3 + 1] = 0; pos[i * 3] += Math.sin(t + i) * 0.001; }
+      dg.attributes.position.needsUpdate = true;
+    });
+  }
+
+  /* ---------- B7. Carro: BMW M4 CSL (modelo .glb) com a logo Ruwer Garage nas laterais ----------
+     Modelo: "BMW M4csl", de Mpgs Studios (sketchfab.com/mpgs.studio), licença CC BY 4.0 — manter o crédito no rodapé.
+     O arquivo original (70 MB, ~1 milhão de triângulos) foi reduzido para ~1,3 MB e ~120 mil triângulos.
+     Se o modelo não carregar (sem GLTFLoader ou sem rede), entra o carro estilizado feito em código. */
+  const CAR_URL_FALLBACK = 'assets/models/bmw-m4csl.glb';
+  function buildCar() {
+    const car = new THREE.Group();
+    const env = buildEnvMap();
+    car.rotation.y = -0.6;            // 3/4 de frente para quem entra pelo corredor
+    scene.add(car);
+    if (!THREE.GLTFLoader) { buildPlaceholderCar(car, env); return; }
+    /* o caminho do modelo parte da pasta da logo, assim funciona em qualquer pasta/hospedagem */
+    const logoEl = document.querySelector('.brand img');
+    const url = logoEl ? (logoEl.currentSrc || logoEl.src).replace(/img\/[^/]+$/, 'models/bmw-m4csl.glb') : CAR_URL_FALLBACK;
+    new THREE.GLTFLoader().load(url, g => { dressCar(g.scene, env); car.add(g.scene); applyDecals(car, g.scene, logoEl); },
+      undefined, () => buildPlaceholderCar(car, env));
+  }
+
+  /* materiais do modelo: pintura cinza metálica, vidros escuros, pinças e luzes; tudo refletindo o neon do galpão */
+  function dressCar(root, env) {
+    const paint = new THREE.MeshPhysicalMaterial({ color: col(0x2b2e33), metalness: 0.9, roughness: 0.36, clearcoat: 1, clearcoatRoughness: 0.1, envMap: env, envMapIntensity: 0.42 });
+    const glass = new THREE.MeshStandardMaterial({ color: col(0x040506), metalness: 1, roughness: 0.06, envMap: env, envMapIntensity: 0.55 });   // opaco: esconde o interior e poupa a GPU
+    const lampW = new THREE.MeshBasicMaterial({ color: col(WHITE) }), lampR = new THREE.MeshBasicMaterial({ color: col(RED) });
+    root.traverse(o => {
+      if (!o.isMesh) return;
+      /* o arquivo guarda as posições compactadas em inteiros de 16 bits; aqui voltam a ser float,
+         porque o raycaster e o DecalGeometry do three r128 leem os valores brutos */
+      const pos = o.geometry.attributes.position;
+      if (pos.normalized) {
+        const src = pos.array, k = 1 / (src instanceof Int16Array ? 32767 : src instanceof Uint16Array ? 65535 : src instanceof Int8Array ? 127 : 255);
+        const f = new Float32Array(pos.count * 3);
+        for (let i = 0; i < pos.count; i++) { f[i * 3] = pos.getX(i) * k; f[i * 3 + 1] = pos.getY(i) * k; f[i * 3 + 2] = pos.getZ(i) * k; }
+        o.geometry.setAttribute('position', new THREE.BufferAttribute(f, 3));
+        o.geometry.boundingSphere = null; o.geometry.boundingBox = null;
+      }
+      if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals();   // as normais não vêm no arquivo: são calculadas aqui
+      const n = o.material.name || '';
+      if (/^Car_Paint$/.test(n)) { o.material = paint; o.userData.paint = true; }
+      else if (/^Glass/i.test(n)) o.material = glass;
+      else if (n === 'lightt') o.material = lampW;
+      else if (n === 'Red_Light') o.material = lampR;
+      else { o.material.envMap = env; o.material.envMapIntensity = 0.35; o.material.side = THREE.FrontSide;
+             if (o.material.emissive) o.material.emissiveIntensity = Math.min(o.material.emissiveIntensity, 0.4); }
+    });
+    root.position.x = -0.13;          // centraliza o carro na baia (o modelo vem deslocado 13 cm)
+    root.updateMatrixWorld(true);
+  }
+
+  /* adesivo lateral: a logo oficial é projetada sobre a lataria (DecalGeometry), acompanhando a curva da porta */
+  const DECAL = { x: -0.25, y: 0.66, w: 1.5 };          // posição no carro (m) e largura do adesivo
+  function applyDecals(car, root, logoEl) {
+    if (!THREE.DecalGeometry || !logoEl) return;
+    const tex = new THREE.TextureLoader().load(logoEl.currentSrc || logoEl.src); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 4;
+    const mat = new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: col(WHITE), emissiveIntensity: 0.14, transparent: true,
+      roughness: 0.45, metalness: 0.1, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4 });
+    const panels = []; root.traverse(o => { if (o.userData.paint) panels.push(o); });
+    scene.updateMatrixWorld(true);
+    const ray = new THREE.Raycaster(), size = new THREE.Vector3(DECAL.w, DECAL.w * 265 / 965, 0.5);
+    [1, -1].forEach(side => {
+      /* raio lançado de fora para dentro, no espaço do carro, para achar o ponto exato da lataria */
+      const from = car.localToWorld(new THREE.Vector3(DECAL.x, DECAL.y, 3 * side));
+      const to = car.localToWorld(new THREE.Vector3(DECAL.x, DECAL.y, 0));
+      ray.set(from, to.sub(from).normalize());
+      const hit = ray.intersectObjects(panels, false)[0]; if (!hit) return;
+      const rot = new THREE.Euler(0, car.rotation.y + (side < 0 ? Math.PI : 0), 0);
+      const m = new THREE.Mesh(new THREE.DecalGeometry(hit.object, hit.point, rot, size), mat);
+      scene.add(m);                  // a geometria do adesivo já sai em coordenadas do mundo
+    });
+  }
+
+  /* mapa de ambiente: uma mini-cena só com as luzes de neon, pré-filtrada pelo PMREM.
+     É o que faz a pintura metálica e os vidros refletirem as fitas de LED sem custo por quadro. */
+  function buildEnvMap() {
+    const es = new THREE.Scene(); es.background = col(0x020202);
+    const add = (w, h, d, x, y, z, hex, ry) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshBasicMaterial({ color: col(hex) })); m.position.set(x, y, z); m.rotation.y = ry || 0; es.add(m); };
+    add(14, 0.5, 0.5, 0, 8, 0, WHITE, 0.5); add(14, 0.5, 0.5, 0, 8, 6, RED, -0.5); add(14, 0.5, 0.5, 0, 8, -6, WHITE, -0.5);
+    add(0.6, 7, 4, -10, 3, 0, WHITE); add(0.6, 7, 4, 10, 3, 0, RED); add(6, 3, 0.4, 0, 4, -11, RED); add(8, 0.4, 0.4, 0, 1.2, 11, WHITE);
+    const pm = new THREE.PMREMGenerator(renderer), rt = pm.fromScene(es, 0.03);
+    pm.dispose(); return rt.texture;
+  }
+
+  function buildPlaceholderCar(car, env) {
+    const paint = new THREE.MeshPhysicalMaterial({ color: col(0x3a3d43), metalness: 0.9, roughness: 0.34, clearcoat: 1, clearcoatRoughness: 0.08, envMap: env, envMapIntensity: 0.55 });
+    const glass = new THREE.MeshStandardMaterial({ color: col(0x050608), metalness: 1, roughness: 0.05, envMap: env, envMapIntensity: 0.7 });
+    const trim  = new THREE.MeshStandardMaterial({ color: col(0x0a0a0b), metalness: 0.6, roughness: 0.5, envMap: env, envMapIntensity: 0.5 });
+    const tire  = new THREE.MeshStandardMaterial({ color: col(0x0c0c0d), metalness: 0.1, roughness: 0.9 });
+    const rimM  = new THREE.MeshStandardMaterial({ color: col(0x8d9096), metalness: 1, roughness: 0.3, envMap: env, envMapIntensity: 0.6 });
+    const calM  = new THREE.MeshStandardMaterial({ color: col(RED), emissive: col(RED), emissiveIntensity: 0.35, metalness: 0.4, roughness: 0.4 });
+    const halfW = 0.9, ext = { depth: halfW * 2, bevelEnabled: true, bevelThickness: 0.07, bevelSize: 0.07, bevelSegments: 4, curveSegments: 20 };
+
+    /* carroceria: perfil lateral (x = comprimento, y = altura) extrudado na largura, com caixas de roda recortadas */
+    const WX = 1.42, WR = 0.345, AR = 0.43;                 // posição das rodas, raio da roda, raio do arco
+    const s = new THREE.Shape();
+    s.moveTo(-2.26, 0.36);
+    s.lineTo(-WX - AR, 0.3);  s.absarc(-WX, WR, AR, Math.PI, 0, true);
+    s.lineTo(WX - AR, 0.3);   s.absarc(WX, WR, AR, Math.PI, 0, true);
+    s.lineTo(2.18, 0.3);
+    s.quadraticCurveTo(2.36, 0.34, 2.33, 0.62);             // para-choque dianteiro
+    s.quadraticCurveTo(2.2, 0.8, 1.2, 0.93);                // capô
+    s.lineTo(0.95, 0.97);
+    s.lineTo(-1.52, 1.01);                                  // linha de cintura
+    s.quadraticCurveTo(-2.1, 1.02, -2.3, 0.94);             // tampa do porta-malas
+    s.quadraticCurveTo(-2.38, 0.7, -2.26, 0.36);
+    const body = new THREE.Mesh(new THREE.ExtrudeGeometry(s, ext), paint);
+    body.position.z = -halfW; car.add(body);
+
+    /* cabine: vidros escuros e um teto na cor da carroceria */
+    const g = new THREE.Shape();
+    g.moveTo(1.0, 0.95); g.quadraticCurveTo(0.55, 1.36, 0.18, 1.4);
+    g.lineTo(-0.82, 1.4); g.quadraticCurveTo(-1.3, 1.34, -1.72, 0.99); g.lineTo(1.0, 0.95);
+    const cab = new THREE.Mesh(new THREE.ExtrudeGeometry(g, Object.assign({}, ext, { depth: 1.5, bevelSize: 0.05, bevelThickness: 0.05 })), glass);
+    cab.position.z = -0.75; car.add(cab);
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.12, 0.035, 1.42), paint); roof.position.set(-0.32, 1.445, 0); car.add(roof);
+    [-0.42].forEach(x => { const p = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.4, 1.62), trim); p.position.set(x, 1.19, 0); car.add(p); });   // coluna B
+
+    /* rodas: pneu, aro de 5 raios, disco e pinça de freio vermelha */
+    function wheel(x, zSide) {
+      const w = new THREE.Group();
+      const t = new THREE.Mesh(new THREE.CylinderGeometry(WR, WR, 0.25, 36), tire); t.rotation.x = Math.PI / 2; w.add(t);
+      const lip = new THREE.Mesh(new THREE.TorusGeometry(0.245, 0.018, 8, 40), rimM); lip.position.z = 0.125 * zSide; w.add(lip);
+      const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.03, 28), trim); disc.rotation.x = Math.PI / 2; disc.position.z = 0.07 * zSide; w.add(disc);
+      for (let i = 0; i < 5; i++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(0.235, 0.05, 0.03), rimM), a = i / 5 * 6.283 + 0.3;
+        sp.position.set(Math.cos(a) * 0.125, Math.sin(a) * 0.125, 0.12 * zSide); sp.rotation.z = a; w.add(sp); }
+      const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.04, 16), rimM); hub.rotation.x = Math.PI / 2; hub.position.z = 0.125 * zSide; w.add(hub);
+      const cal = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.19, 0.06), calM); cal.position.set(0.16, 0.06, 0.085 * zSide); cal.rotation.z = -0.35; w.add(cal);
+      w.position.set(x, WR, 0.86 * zSide); car.add(w);
+    }
+    wheel(WX, 1); wheel(WX, -1); wheel(-WX, 1); wheel(-WX, -1);
+
+    /* faróis e lanternas: MeshBasic para brilhar no bloom */
+    const hl = new THREE.MeshBasicMaterial({ color: col(WHITE) }), tl = new THREE.MeshBasicMaterial({ color: col(RED) });
+    [0.62, -0.62].forEach(z => { const m = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.38), hl); m.position.set(2.33, 0.7, z); car.add(m); });
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.045, 1.66), tl); tail.position.set(-2.36, 0.86, 0); car.add(tail);
+    const lipF = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.03, 1.8), trim); lipF.position.set(2.24, 0.25, 0); car.add(lipF);       // spoiler dianteiro
+    const sideL = new THREE.Mesh(new THREE.BoxGeometry(1.95, 0.05, 2.0), trim); sideL.position.set(0, 0.27, 0); car.add(sideL);      // saias
+
+    /* logo lateral RUWER GARAGE: usa a logo oficial que já está carregada no cabeçalho do site (nos dois lados do carro) */
+    const logoEl = document.querySelector('.brand img');
+    if (logoEl) {
+      const tex = new THREE.TextureLoader().load(logoEl.currentSrc || logoEl.src); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 4;
+      const gm = new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: col(WHITE), emissiveIntensity: 0.16, transparent: true, roughness: 0.4, metalness: 0.2, depthWrite: false });
+      [1, -1].forEach(side => { const p = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.6 * 265 / 965), gm);   // proporção da logo: 965 x 265
+        p.position.set(-0.15, 0.66, (halfW + 0.075) * side); if (side < 0) p.rotation.y = Math.PI; car.add(p); });
+    }
+  }
+
+  /* ---------- B8. Pós-processamento: bloom ----------
+     RenderPass -> UnrealBloomPass (glow do neon, do letreiro e dos faróis) -> correção de gamma (sRGB final).
+     Se algum script de pós-processamento não carregar, cai para o render direto sem quebrar a página. */
+  function buildPost() {
+    if (!(THREE.EffectComposer && THREE.RenderPass && THREE.UnrealBloomPass && THREE.ShaderPass)) { renderer.outputEncoding = THREE.sRGBEncoding; return; }
+    try {
+      /* WebGL2: alvo com multisampling, para ter anti-aliasing mesmo dentro do composer */
+      const rt = renderer.capabilities.isWebGL2 ? new THREE.WebGLMultisampleRenderTarget(W * DPR, H * DPR) : undefined;
+      composer = new THREE.EffectComposer(renderer, rt);
+      composer.addPass(new THREE.RenderPass(scene, camera));
+      const b = Q.BLOOM;
+      composer.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(W, H), b.strength, b.radius, b.threshold));
+      if (THREE.GammaCorrectionShader) composer.addPass(new THREE.ShaderPass(THREE.GammaCorrectionShader));
+    } catch (e) { composer = null; renderer.outputEncoding = THREE.sRGBEncoding; }
+  }
+
+  function resize() {
+    W = innerWidth; H = innerHeight; portrait = W / H < 1;
+    renderer.setSize(W, H, false);
+    if (composer) composer.setSize(W, H);
+    if (mirror) mirror.getRenderTarget().setSize(Math.floor(W * DPR * Q.MIRROR_SCALE), Math.floor(H * DPR * Q.MIRROR_SCALE));
+    camera.aspect = W / H; camera.fov = portrait ? 58 : 40; camera.updateProjectionMatrix();
+  }
+
+  /* um quadro: posiciona a câmera a partir de RUWER.st (animado em transition.js) e renderiza */
+  function frame(t) {
+    const a = st.a + mouse.x * 0.06;                         // parallax leve do mouse
+    const rad = st.rad * (portrait && st.rad < 20 ? 1.3 : 1);
+    camera.position.set(Math.sin(a) * rad, st.h + mouse.y * 0.22, Math.cos(a) * rad);
+    camera.lookAt(0, st.ty, 0);
+    for (let i = 0; i < animated.length; i++) animated[i](t);
+    composer ? composer.render() : renderer.render(scene, camera);
+  }
+
+/* ---------- API usada por transition.js ---------- */
+let ready = false;
+function init3D() {                                          // devolve false se o navegador não tiver WebGL
+  if (ready) return true;
+  try { if (!window.THREE) return false; init($('#gl')); ready = true; } catch (e) { return false; }
   return true;
 }
-addEventListener('resize',()=>{if(renderer)resize()});
+addEventListener('resize', () => { if (ready) resize(); });
 
 RUWER.world3d = {
   init3D,
-  step: t => step(t),
-  ready: () => !!renderer,
+  step: t => { if (ready) frame(t); },
+  ready: () => ready,
   get camera() { return camera; }
 };
 })();
