@@ -27,3 +27,13 @@
 /* logo oficial (imagem com fundo transparente) */
 .brand img{display:block;height:34px;width:auto}
 .nav.min .brand img{height:30px}
+
+/* ===== Botões das seções: minimalistas (contorno fino, sem brilho nem quadrado) ===== */
+.btn{background:transparent;color:var(--white);border:1px solid rgba(255,249,243,.45);border-radius:999px;box-shadow:none;transition:background-color .25s,color .25s,border-color .25s}
+.btn:hover,.btn:focus-visible{background:var(--white);color:var(--black);border-color:var(--white)}
+.btn.red{background:transparent;border-color:var(--red);color:var(--white)}
+.btn.red:hover,.btn.red:focus-visible{background:var(--red);color:var(--white);border-color:var(--red);box-shadow:none}
+.btn.light{background:transparent;color:var(--white);border-color:rgba(255,249,243,.45)}
+.btn.light:hover{background:var(--white);color:var(--black);border-color:var(--white);box-shadow:none}
+.btn .sq{display:none}
+.btn svg{width:14px;height:14px}

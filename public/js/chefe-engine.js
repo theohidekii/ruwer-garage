@@ -137,27 +137,23 @@ const OP_WORRY=['Entendo a preocupação.','Obrigado por contar, isso já ajuda 
 const OP_NEUTRAL=['Certo, vamos por partes.','Anotado.','Boa, isso já me dá uma direção.'];
 const FALLBACK=['Rs, aqui eu só entendo de carro. Se o assunto for barulho, luz acesa no painel ou falta de força, me conta que eu ajudo.','Essa fugiu da minha especialidade, que é mecânica e engenharia de motor. Descreva o que o carro está fazendo e eu começo por aí.','Não consegui ligar isso a um sintoma do carro. Pode contar em outras palavras o que você percebe: barulho, vibração, cheiro ou luz no painel?'];
 
+/* a empresa não dá diagnóstico por achismo: a IA só classifica a gravidade e leva ao formulário */
+const GRAVIDADE=[
+  'Pelo que você descreveu, não há sinal de risco imediato. Mesmo assim, vale avaliar para o problema não piorar.',
+  'Caso de atenção: o ideal é agendar a avaliação nos próximos dias.',
+  'Caso sério: agende a avaliação o quanto antes e evite rodar com o carro até lá.',
+  'Caso grave: não dirija o carro. Leve à oficina por reboque, sem rodar.'];
+const NAO_DIAG='A causa só é confirmada com medição na oficina, por isso não damos diagnóstico pela conversa.';
 function replyNew(e,worry,ab){
-  let t=(e.urg>=3?'Isso pede atenção imediata.':(worry?pick(OP_WORRY):pick(OP_NEUTRAL)))+' '+e.hip+'.';
-  if(e.seg)t+=' '+e.seg;
-  if(ab.alerts.length)t+=' '+ab.alerts.join(' ');
-  if(mem.veic)t+=' Vou considerar que é um '+veicTxt()+'.';
-  t+=' Para afinar a hipótese: '+e.q[0].charAt(0).toLowerCase()+e.q[0].slice(1);
-  mem.qIndex=1;mem.pending='detalhe';mem.offered=true;
-  return{text:t+' A confirmação é feita com instrumento na avaliação física, e eu já deixo o resumo pronto para o consultor.',actions:['wa']}}
+  mem.offered=true;mem.pending=null;
+  return{text:GRAVIDADE[Math.min(mem.urg,3)]+' '+NAO_DIAG+' Clique abaixo para ir ao formulário com o seu relato já preenchido.',actions:['form']}}
 function replyRefine(e,ab){
-  let t='';
-  if(ab.newVeic)t+='Obrigado, '+veicTxt()+' anotado. ';
-  if(ab.newDet.length)t+='Anotei: '+ab.newDet.map(d=>d.l).join(', ')+'. ';
-  const r=ab.newDet.map(d=>e.refino[d.k]).filter(Boolean)[0];
-  t+=(r||pick(['Isso se encaixa na hipótese.','Esse detalhe ajuda a estreitar o caminho.','Faz sentido com o que você descreveu.']))+' ';
+  let t='Anotado. ';
+  if(ab.newVeic)t+='Obrigado, '+veicTxt()+' registrado. ';
   if(ab.alerts.length)t+=ab.alerts.join(' ')+' ';
-  while(mem.qIndex<e.q.length&&/lados?\b/.test(e.q[mem.qIndex])&&(mem.detalhes.has('esq')||mem.detalhes.has('dir')))mem.qIndex++;   // não repete pergunta já respondida
-  let actions;
-  if(!mem.veic&&!mem.askedVeic){t+='Qual é o modelo e o ano do carro? Cada plataforma tem pontos fracos conhecidos.';mem.askedVeic=true;mem.pending='veiculo'}
-  else if(mem.qIndex<e.q.length){t+=e.q[mem.qIndex++];mem.pending='detalhe'}
-  else{t+=e.acao+' Posso montar o resumo para o consultor?';mem.pending=null;mem.offered=true;actions=['wa']}
-  return{text:t.trim(),actions}}
+  t+=GRAVIDADE[Math.min(mem.urg,3)]+' '+NAO_DIAG+' Clique abaixo para ir ao formulário com o seu relato já preenchido.';
+  mem.offered=true;mem.pending=null;
+  return{text:t.trim(),actions:['form']}}
 
 /* ---------- mock do LLM: memória + intenção + tolerância a erro de digitação ---------- */
 function mockChefe(history){

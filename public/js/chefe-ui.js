@@ -10,9 +10,10 @@ const chatHist=[];   // memória da conversa: [{role:'user'|'assistant', content
 /* >>> PARA USAR UM LLM REAL: aponte LLM.endpoint para o SEU backend (ex.: '/api/chefe-de-oficina').
    Esse backend chama OpenAI/Anthropic com a chave guardada no servidor. NUNCA coloque chave de API neste arquivo. <<< */
 const LLM={endpoint:null};
-const SYSTEM_PROMPT='Você é o Chefe de Oficina virtual da Ruwer Garage, complexo automotivo em Vicente Pires, Brasília. '+
-  'Acolha o cliente, investigue o sintoma com perguntas curtas, entregue um pré-diagnóstico técnico sempre como hipótese (nunca definitivo) '+
-  'e convide para a avaliação física. Priorize a segurança quando houver risco. Nunca invente preços, prazos ou garantias. '+
+const SYSTEM_PROMPT='Você é o assistente virtual da Ruwer Garage, complexo automotivo em Vicente Pires, Brasília. '+
+  'A empresa NÃO entrega diagnóstico por achismo. Sua única função é classificar a GRAVIDADE do caso relatado pelo cliente '+
+  '(sem risco, atenção, sério ou grave), orientar a segurança (ex.: não dirigir em caso grave, pedir guincho) e encaminhar '+
+  'o cliente ao formulário de avaliação. Não sugira causas, peças, serviços, preços, prazos ou garantias. '+
   'Se perguntarem, diga que é uma inteligência artificial.';
 
 /* ÚNICO ponto de contato com a "inteligência". Troque o mock por fetch sem mexer no resto da interface.
@@ -49,9 +50,13 @@ function addMsg(who,text,actions){
   const el=document.createElement('div');el.className='m '+(who==='user'?'me':'bot');
   const p=document.createElement('p');p.textContent=text;el.appendChild(p);       // textContent: o texto do cliente nunca vira HTML
   if(actions&&actions.length){const row=document.createElement('div');row.className='act';
-    actions.forEach(a=>{const b=document.createElement('a');b.className='btn sm';b.target='_blank';b.rel='noopener';
-      if(a==='wa'){b.href=waLink(resumo());b.textContent='Enviar resumo ao consultor'}
-      else{b.href='https://www.google.com/maps/search/?api=1&query=Complexo+Automotivo+Vicente+Pires+Bras%C3%ADlia';b.textContent='Abrir no mapa'}
+    actions.forEach(a=>{const b=document.createElement('a');b.className='btn sm';
+      if(a==='form'){b.href='#contato';b.textContent='Ir para o formulário';
+        b.addEventListener('click',e=>{e.preventDefault();const f=document.getElementById('ctaForm');
+          if(f)f.elements.msg.value=chatHist.filter(m=>m.role==='user').map(m=>m.content).join('\n');
+          document.getElementById('contato').scrollIntoView({behavior:'smooth'})})}
+      else if(a==='wa'){b.target='_blank';b.rel='noopener';b.href=waLink(resumo());b.textContent='Enviar resumo ao consultor'}
+      else{b.target='_blank';b.rel='noopener';b.href='https://www.google.com/maps/search/?api=1&query=Complexo+Automotivo+Vicente+Pires+Bras%C3%ADlia';b.textContent='Abrir no mapa'}
       row.appendChild(b)});el.appendChild(row)}
   iaLog.appendChild(el);toEnd();return el}
 

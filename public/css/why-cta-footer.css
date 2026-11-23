@@ -49,3 +49,23 @@ footer .fl:hover{color:var(--red)}
 .brand svg,.bigmark svg{color:var(--red)}
 
 .bigmark img{height:clamp(80px,17vw,220px);width:auto;display:block}
+
+/* footer enxuto: endereço + ícones de contato */
+.fgrid{grid-template-columns:1fr auto;align-items:start}
+.soc{display:flex;gap:12px}
+.soc-b{width:48px;height:48px;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(255,249,243,.3);color:var(--white);transition:color .25s,background-color .25s,border-color .25s}
+.soc-b svg{width:22px;height:22px;fill:currentColor}
+.soc-b:hover,.soc-b:focus-visible{background:var(--white);color:var(--black);border-color:var(--white)}
+.soc-b svg.ig-i{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.soc-b svg.ig-i circle:last-child{fill:currentColor;stroke:none}
+
+/* seção "por que a Ruwer": foto de trabalho + resultados reais */
+.why-media{display:grid;gap:20px}
+.why .ph-box{aspect-ratio:4/3}
+.ph-cap{position:absolute;left:20px;bottom:20px;font:500 12px/16px 'IBM Plex Mono',monospace;letter-spacing:.75px;text-transform:uppercase;color:var(--white);background:rgba(7,3,3,.7);padding:8px 12px;border-radius:6px}
+.proof{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pr{padding:18px 16px;border:1px solid var(--sd);border-radius:10px;background:#0d0707}
+.pr b{display:block;font:500 clamp(28px,3vw,36px)/1 'Archivo',sans-serif;color:var(--red);margin-bottom:10px}
+.pr span{font:400 12px/18px 'Inter',sans-serif;color:var(--w70)}
+.proof-note{font-size:13px;line-height:20px;color:var(--w70)}
+@media (max-width:520px){.proof{grid-template-columns:1fr}}

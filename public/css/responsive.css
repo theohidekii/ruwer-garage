@@ -12,3 +12,4 @@
   .lb-n{top:auto;bottom:calc(14px + env(safe-area-inset-bottom,0px));margin:0}.lb-f img{max-height:calc(100vh - 230px)}
 }
 @media (prefers-reduced-motion:reduce){.nav,.cover{animation:none}.rv{opacity:1;translate:none;transition:none}.lb,.lb-f img{transition:none}.dots i{animation:none;opacity:1}}
+

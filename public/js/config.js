@@ -7,7 +7,8 @@ window.RUWER = (function () {
 
   /* WhatsApp: TROQUE O NÚMERO (DDI 55 + DDD + número) */
   const NUM = '5561999999999';
-  const WA = 'https://api.whatsapp.com/send?phone=' + NUM + '&text=' + encodeURIComponent('Olá! Vim pelo site da Ruwer Garage e quero agendar uma avaliação.');
+  const MSG_PADRAO = 'Olá! Vim pelo site da Ruwer Garage e quero agendar uma avaliação.';
+  const WA = 'https://api.whatsapp.com/send?phone=' + NUM + '&text=' + encodeURIComponent(MSG_PADRAO);
   const waLink = t => 'https://api.whatsapp.com/send?phone=' + NUM + '&text=' + encodeURIComponent(t);
   document.querySelectorAll('[data-wa]').forEach(a => { a.href = WA; a.target = '_blank'; a.rel = 'noopener'; });
 
